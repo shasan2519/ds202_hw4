@@ -1,0 +1,101 @@
+---
+title: "ds202_hw4"
+author: "Syed Hasan www.github.com/shasan2519"
+date: "3/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(datasets)
+library(dplyr)
+library(ggplot2)
+ChickWeight
+```
+
+Q1
+```{r}
+weight0 = ChickWeight %>%
+filter(Time == 0) %>%
+group_by(Diet) %>%
+summarize(Number=n(), Average=mean(weight, na.rm = TRUE),
+standardDev=sd(weight, na.rm = TRUE))
+print(weight0)
+```
+Q2
+```{r}
+complete <- ChickWeight %>%
+  group_by(Chick) %>%
+  mutate(n = n()) %>%
+  filter(n == 12)
+
+complete %>% head(3)
+```
+Q3
+```{r}
+complete <- complete %>% 
+  mutate(gained_weight = weight - weight[Time == 0])
+
+complete %>% head(3)
+```
+Q4
+Diet 1 has the lowest gains
+diet 2 has a better average
+```{r}
+library(ggplot2)
+complete %>%
+  group_by(Diet) %>%
+  summarize(mid = median(gained_weight))
+complete %>%
+  filter(Time==21) %>%
+  mutate(Diet = factor(Diet, levels=c("1","2","3","4"))) %>%
+  ggplot(aes(x=Diet,y=gained_weight))+geom_boxplot() + expand_limits(x =0)
+```
+Q5
+Chick 35 gained highest, while chick 22 gained lowest
+```{r}
+complete %>% filter(Time == 21) %>%
+ggplot(aes(x = Chick, y = gained_weight, shape = Diet, color = Diet))+geom_jitter()+ggtitle("Diet influenced weight gain by Day 21")+xlab("chick")+ylab("weight gained")
+complete %>% ungroup() %>% filter(Time == 21) %>%filter(gained_weight == max(gained_weight) | gained_weight == min(gained_weight))
+```
+Q6
+```{r}
+complete %>% ungroup() %>%filter(weight == min(weight[Time == 0])| weight == max(weight[Time== 0])) %>% print()
+
+min <- complete %>% filter(Chick %in% c(27,28,29,33,36,48))
+max <- complete %>% filter(Chick %in% c(3, 11, 19, 23))
+
+min %>%
+  ggplot(aes(x = Time, y = gained_weight, color = Chick)) +geom_jitter() +geom_smooth(se=FALSE) +ggtitle("weight gain in ascending order") + xlab("time") + ylab("gained weight")
+
+max %>%
+  ggplot(aes(x = Time, y = gained_weight, color = Chick)) +geom_jitter() +geom_smooth(se=FALSE) +ggtitle("weight gain in descending order") + xlab("time") + ylab("gained weight 2")
+```
+Q7
+```{r}
+mean <- complete %>% group_by(Time) %>%
+  summarize(mean = mean(gained_weight)) %>% as.data.frame()
+
+minmax <- complete %>% filter(Chick %in%
+          c(3,11,19,23,27,28,29,33,36,48))
+
+ggplot() +
+  geom_line(data = minmax, aes(x = Time, y = gained_weight, color =
+              Chick)) +
+  geom_smooth(data = minmax, aes(x = Time, y = gained_weight, color =
+              Chick), se = FALSE) +
+  geom_line(data = mean, aes(x = Time, y = mean)) + geom_smooth(data = mean, aes(x = Time, y = mean), se = FALSE, color = "red") +xlab("time") + ylab("gained weight")
+```
+Q8
+The plot below shows each chick differnt weight.
+```{r}
+minmax <- complete %>% filter(Chick == 24 | Chick == 35)
+
+ggplot() +
+  geom_line(data = minmax, aes(x = Time, y = gained_weight, color =
+              Chick)) +
+  geom_smooth(data = minmax, aes(x = Time, y = gained_weight, color =
+              Chick), se = FALSE) +
+  geom_line(data = mean, aes(x = Time, y = mean)) +geom_smooth(data = mean, aes(x = Time, y = mean), se = FALSE) +xlab("time") + ylab("gained weight")
+```
+
